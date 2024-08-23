@@ -1,5 +1,6 @@
 package org.dmytroqa.library.controllers;
 
+import jakarta.servlet.http.HttpSession;
 import org.dmytroqa.library.models.Book;
 import org.dmytroqa.library.services.BookService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.view.RedirectView;
 
 import java.util.List;
 
@@ -15,10 +17,43 @@ import java.util.List;
 public class BookController {
 
     private BookService bookService;
+    private boolean loggedIn = false;
 
     @Autowired
     public BookController(BookService bookService) {
         this.bookService = bookService;
+    }
+
+    @GetMapping("/")
+    public RedirectView index(HttpSession session) {
+        if (loggedIn) {
+            return new RedirectView("index.html");
+        } else {
+            return new RedirectView("/login");
+        }
+    }
+
+    @PostMapping("/login")
+    public String login(@RequestParam String username, @RequestParam String password, HttpSession session) {
+        final String validUsername = "admin";
+        final String validPassword = "admin";
+        if (validUsername.equals(username) && validPassword.equals(password)) {
+            this.loggedIn = true;
+            return "redirect:/";
+        }
+        // If invalid, stay on the login page with an error message
+        return "redirect:/login?error=true";
+    }
+
+    @GetMapping("/login")
+    public String showLoginPage() {
+        return "login";
+    }
+
+    @GetMapping("/logout")
+    public String logout() {
+        this.loggedIn = false;
+        return "login";
     }
 
     @GetMapping("/books")
